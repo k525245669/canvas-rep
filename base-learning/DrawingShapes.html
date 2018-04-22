@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>canvas line practice</title>
+  <style type="text/css">
+    canvas {
+      border: 1px solid #333;
+      margin: 20px
+    }
+  </style>
+  <script type="text/javascript">
+    function draw() {
+      var ctx1 = getCtx('canvas-1')
+      ctx1.fillRect(25, 25, 100, 100)
+      ctx1.clearRect(35, 35, 80, 80)
+      ctx1.fillStyle = 'rgb(255,0,0)' 
+      ctx1.strokeRect(45, 45, 60, 60)
+
+      var ctx2 = getCtx('canvas-2')
+      ctx2.beginPath()
+      ctx2.moveTo(25, 50)
+      ctx2.lineTo(50, 75)
+      ctx2.lineTo(50, 25)
+      ctx2.closePath()
+      ctx2.stroke()
+
+      ctx2.beginPath()
+      ctx2.moveTo(75, 50)
+      ctx2.lineTo(100, 75)
+      ctx2.lineTo(100, 25)
+      // auto closed
+      ctx2.fill()
+
+      var ctx3 = getCtx('canvas-3')
+      ctx3.beginPath();
+      ctx3.arc(75, 75, 50, 0, Math.PI * 2, true); // Outer circle
+      ctx3.moveTo(110, 75);
+      ctx3.arc(75, 75, 35, 0, Math.PI, false);  // Mouth (clockwise)
+      ctx3.moveTo(65, 65);
+      ctx3.arc(60, 65, 5, 0, Math.PI * 2, true);  // Left eye
+      ctx3.moveTo(95, 65);
+      ctx3.arc(90, 65, 5, 0, Math.PI * 2, true);  // Right eye
+      ctx3.stroke();
+      // ctx3.moveTo(75,75)
+      // ctx3.lineTo(50, 0)
+      // ctx3.stroke()
+
+      var ctx4 = getCtx('canvas-4')
+      // Filled triangle
+      ctx4.beginPath();
+      ctx4.moveTo(25, 25);
+      ctx4.lineTo(105, 25);
+      ctx4.lineTo(25, 105);
+      ctx4.fill();
+
+      // Stroked triangle
+      ctx4.beginPath();
+      ctx4.moveTo(125, 125);
+      ctx4.lineTo(125, 45);
+      ctx4.lineTo(45, 125);
+      ctx4.closePath();
+      ctx4.stroke();
+
+      var ctx5 = getCtx('canvas-5')
+      ctx5.beginPath()
+      // end - start >= 2Pi  && clockwise , draw circle
+      ctx5.arc(35, 35, 30, 0, Math.PI * 2.1)
+      ctx5.stroke()
+
+      ctx5.beginPath()
+      // start - end >= 2Pi && anticlockwise, draw circle
+      ctx5.arc(35, 100, 30, Math.PI * 2.1, 0, true)
+      ctx5.stroke()
+
+      var ctx6 = getCtx('canvas-6')
+      var pA = new Point(10, 10)
+      var pB = new Point(20, 20)
+      var pC = new Point(30, 30)
+      // if pA = pB or pB = pC or radius==0  or pA pB pC all lie on asinge stright line,
+      // then add pB to subPath,then line pB tp pA
+      ctx6.beginPath()
+      ctx6.moveTo(pA.x, pA.y)
+      ctx6.arcTo(pB.x, pB.y, pC.x, pC.y, 20)
+      ctx6.stroke()
+
+
+      var pA = new Point(10, 70)
+      var pB = new Point(60, 30)
+      var pC = new Point(100, 70)
+      ctx6.beginPath()
+      ctx6.moveTo(pA.x, pA.y)
+      ctx6.arcTo(pB.x, pB.y, pC.x, pC.y, 50)
+      ctx6.stroke()
+
+      // draw help line
+      ctx6.beginPath()
+      ctx6.save()
+      ctx6.strokeStyle= 'rgb(200,0,0)'
+      ctx6.moveTo(pA.x, pA.y)
+      ctx6.lineTo(pB.x, pB.y)
+      ctx6.lineTo(pC.x, pC.y)
+
+      ctx6.fillText('A', pA.x, pA.y)
+      ctx6.fillText('B', pB.x, pB.y)
+      ctx6.fillText('C', pC.x, pC.y)
+      ctx6.stroke()
+      ctx6.restore()
+      
+
+      var pA = new Point(35, 100)
+      var pB = new Point(60, 80)
+      var pC = new Point(80, 100)
+      ctx6.beginPath()
+      ctx6.moveTo(pA.x, pA.y)
+      ctx6.arcTo(pB.x, pB.y, pC.x, pC.y, 50)
+      ctx6.stroke()
+
+      ctx6.beginPath()
+      ctx6.save()
+      ctx6.strokeStyle= 'rgb(200,0,0)'
+      ctx6.moveTo(pA.x, pA.y)
+      ctx6.lineTo(pB.x, pB.y)
+      ctx6.lineTo(pC.x, pC.y)
+
+
+      ctx6.fillText('A', pA.x, pA.y)
+      ctx6.fillText('B', pB.x, pB.y)
+      ctx6.fillText('C', pC.x, pC.y)
+
+      // t1 t2 is the tangent point 
+      var t1 = new Point(10, 120)
+      var t2 = new Point(100, 120)
+      ctx6.fillText('t1', t1.x, t1.y)
+      ctx6.fillText('t2', t2.x, t2.y)
+      ctx6.stroke()
+      ctx6.restore()
+
+      var ctx7 = getCtx('canvas-7')
+      var pA = new Point(10,130)
+      var pB = new Point(50, 20)
+      var pC = new Point(100,50)
+
+      ctx7.beginPath()
+      ctx7.moveTo(pA.x, pA.y)
+      ctx7.quadraticCurveTo(pB.x, pB.y, pC.x, pC.y)
+      ctx7.stroke()
+
+      ctx7.beginPath()
+      ctx7.save()
+      ctx7.strokeStyle = 'rgb(200,0,0)'
+      ctx7.moveTo(pA.x, pA.y)
+      ctx7.lineTo(pB.x, pB.y)
+      ctx7.lineTo(pC.x, pC.y)
+      ctx7.fillText('C', pB.x, pB.y)
+      ctx7.stroke()
+
+      var ctx8 = getCtx('canvas-8')
+      var pA = new Point(10,130)
+      var pB = new Point(30, 50)
+      var pC = new Point(100,20)
+      var pD = new Point(100, 50)
+
+      ctx8.beginPath()
+      ctx8.moveTo(pA.x, pA.y)
+      ctx8.bezierCurveTo(pB.x, pB.y, pC.x, pC.y, pD.x, pD.y)
+      ctx8.stroke()
+
+      ctx8.beginPath()
+      ctx8.save()
+      ctx8.strokeStyle = 'rgb(200,0,0)'
+      ctx8.moveTo(pA.x, pA.y)
+      ctx8.lineTo(pB.x, pB.y)
+      ctx8.moveTo(pC.x, pC.y)
+      ctx8.lineTo(pD.x, pD.y)
+      ctx8.fillText('B', pB.x, pB.y)
+      ctx8.fillText('C', pC.x, pC.y)
+      ctx8.stroke()
+
+      var ctx9 = getCtx('canvas-9')
+      ctx9.beginPath();
+      ctx9.moveTo(75, 40);
+      ctx9.bezierCurveTo(75, 37, 70, 25, 50, 25);
+      ctx9.bezierCurveTo(20, 25, 20, 62.5, 20, 62.5);
+      ctx9.bezierCurveTo(20, 80, 40, 102, 75, 120);
+      ctx9.bezierCurveTo(110, 102, 130, 80, 130, 62.5);
+      ctx9.bezierCurveTo(130, 62.5, 130, 25, 100, 25);
+      ctx9.bezierCurveTo(85, 25, 75, 37, 75, 40);
+      ctx9.fill();
+
+
+      var ctx10 = getCtx('canvas-10')
+      roundedRect(ctx10, 10, 10, 50,20, 5)
+      roundedRect(ctx10, 10, 50, 50, 20, 10)
+      roundedRect(ctx10, 10, 90, 50, 20, 20)
+
+      var ctx11 = getCtx('canvas-11')
+      var rectangle = new Path2D()
+      rectangle.rect(10, 10 , 50, 50)
+
+      var circle = new Path2D()
+      circle.moveTo(125, 35)
+      circle.arc(100, 35, 25, 0, 2* Math.PI)
+
+      var result = new Path2D(rectangle)
+      if (result.addPath) {
+        result.addPath(circle)
+      }
+      ctx11.stroke(result)
+
+      var p = new Path2D('M20 20 h 80 v 80 h -80 Z')
+      ctx11.stroke(p)
+    }
+
+    function Point(x, y) {
+      this.x = x
+      this.y = y
+    }
+
+    function getCtx(id) {
+      var ctx =  document.getElementById(id).getContext('2d')
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'bottom'
+      ctx.fillText(id, 75, 150)
+      return ctx
+    }
+
+    function roundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x, y + radius);
+      ctx.lineTo(x, y + height - radius);
+      ctx.arcTo(x, y + height, x + radius, y + height, radius);
+      ctx.lineTo(x + width - radius, y + height);
+      ctx.arcTo(x + width, y + height, x + width, y + height-radius, radius);
+      ctx.lineTo(x + width, y + radius);
+      ctx.arcTo(x + width, y, x + width - radius, y, radius);
+      ctx.lineTo(x + radius, y);
+      ctx.arcTo(x, y, x, y + radius, radius);
+      ctx.stroke();
+    }
+  </script>
+</head>
+<body onload='draw()'>
+  <canvas id='canvas-1' width="150" height="150"></canvas>
+  <canvas id='canvas-2' width="150" height="150"></canvas>
+  <canvas id='canvas-3' width="150" height="150"></canvas>
+  <canvas id='canvas-4' width="150" height="150"></canvas>
+  <canvas id='canvas-5' width="150" height="150"></canvas>
+  <canvas id='canvas-6' width="150" height="150"></canvas>
+  <canvas id='canvas-7' width="150" height="150"></canvas>
+  <canvas id='canvas-8' width="150" height="150"></canvas>
+  <canvas id='canvas-9' width="150" height="150"></canvas>
+  <canvas id='canvas-10' width="150" height="150"></canvas>
+  <canvas id='canvas-11' width="150" height="150"></canvas>
+</body>
+</html>
