@@ -2,12 +2,8 @@
 <html>
 <head>
   <title>canvas line practice</title>
-  <style type="text/css">
-    canvas {
-      border: 1px solid #333;
-      margin: 20px
-    }
-  </style>
+  <link href="./common.css" rel="stylesheet" type="text/css">
+  <script type="text/javascript" src='./common.js'></script>
   <script type="text/javascript">
     function draw() {
       var ctx1 = getCtx('canvas-1')
@@ -214,14 +210,6 @@
     function Point(x, y) {
       this.x = x
       this.y = y
-    }
-
-    function getCtx(id) {
-      var ctx =  document.getElementById(id).getContext('2d')
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'bottom'
-      ctx.fillText(id, 75, 150)
-      return ctx
     }
 
     function roundedRect(ctx, x, y, width, height, radius) {

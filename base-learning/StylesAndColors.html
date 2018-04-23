@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link href="./common.css" rel="stylesheet" type="text/css">
+  <script type="text/javascript" src='./common.js'></script>
+  <script type="text/javascript">
+    function draw() {
+      var ctx1 = getCtx('canvas-1')
+      for (var i = 0; i < 6; i++) {
+        for (var j = 0; j < 6; j++) {
+          ctx1.fillStyle = 'rgb(' + Math.floor(255 - 42.5 *i) + ',' 
+            + Math.floor(255 - 42.5*j) + ',0)'
+          ctx1.fillRect(j*25, i*25, 25, 25)
+        }
+      }
+
+      var ctx2 = getCtx('canvas-2')
+      for (var i = 0; i < 6; i++) {
+        for (var j = 0; j < 6; j++) {
+          ctx2.strokeStyle = 'rgb(' + Math.floor(255 - 42.5 *i) + ',' 
+            + Math.floor(255 - 42.5*j) + ',0)'
+          ctx2.beginPath()
+          ctx2.arc(12.5 + j*25, 12.5 + i*25, 10, 0, Math.PI * 2, true)
+          ctx2.stroke()
+        }
+      }
+
+      var ctx3 = getCtx('canvas-3')
+      // draw background
+      ctx3.fillStyle = '#FD0';
+      ctx3.fillRect(0, 0, 75, 75);
+      ctx3.fillStyle = '#6C0';
+      ctx3.fillRect(75, 0, 75, 75);
+      ctx3.fillStyle = '#09F';
+      ctx3.fillRect(0, 75, 75, 75);
+      ctx3.fillStyle = '#F30';
+      ctx3.fillRect(75, 75, 75, 75);
+      ctx3.fillStyle = '#FFF';
+
+      // set transparency value
+      ctx3.globalAlpha = 0.2;
+
+      // Draw semi transparent circles
+      for (var i = 0; i < 7; i++) {
+        ctx3.beginPath();
+        ctx3.arc(75, 75, 10 + 10 * i, 0, Math.PI * 2);
+        ctx3.fill();
+      }
+
+      var ctx4 = getCtx('canvas-4')
+      // Draw background
+      ctx4.fillStyle = 'rgb(255, 221, 0)';
+      ctx4.fillRect(0, 0, 150, 37.5);
+      ctx4.fillStyle = 'rgb(102, 204, 0)';
+      ctx4.fillRect(0, 37.5, 150, 37.5);
+      ctx4.fillStyle = 'rgb(0, 153, 255)';
+      ctx4.fillRect(0, 75, 150, 37.5);
+      ctx4.fillStyle = 'rgb(255, 51, 0)';
+      ctx4.fillRect(0, 112.5, 150, 37.5);
+
+      // Draw semi transparent rectangles
+      for (var i = 0; i < 10; i++) {
+        ctx4.fillStyle = 'rgba(255, 255, 255, ' + (i + 1) / 10 + ')';
+        for (var j = 0; j < 4; j++) {
+          ctx4.fillRect(5 + i * 14, 5 + j * 37.5, 14, 27.5);
+        }
+      }
+
+      var ctx5 = getCtx('canvas-5')
+      for (var i = 0; i < 10; i++) {
+        ctx5.lineWidth = 1 + i
+        ctx5.beginPath()
+        ctx5.moveTo(5 + i * 14, 5)
+        ctx5.lineTo(5 + i * 14, 140)
+        ctx5.stroke()
+        ctx5.save()
+        ctx5.strokeStyle = 'rgb(200, 51, 0)'
+        ctx5.lineWidth = 1
+        ctx5.moveTo(5 + i * 14, 0)
+        ctx5.lineTo(5 + i*14, 150)
+        ctx5.stroke();
+        ctx5.restore()
+      }
+      // 1px的像素线在奇数坐标下，会占两边像素格各约一半的像素，故绘制出的线，会有虚化的现象。为了不虚化可以用.5的position
+
+      var ctx6 = getCtx('canvas-6')
+      var lineCap = ['butt', 'round', 'square']
+      // Draw guides
+      ctx6.strokeStyle = '#09f';
+      ctx6.beginPath();
+      ctx6.moveTo(10, 10);
+      ctx6.lineTo(140, 10);
+      ctx6.moveTo(10, 140);
+      ctx6.lineTo(140, 140);
+      ctx6.stroke();
+
+      // Draw lines
+      ctx6.strokeStyle = 'black';
+      for (var i = 0; i < lineCap.length; i++) {
+        ctx6.lineWidth = 15;
+        ctx6.lineCap = lineCap[i];
+        ctx6.beginPath();
+        ctx6.moveTo(25 + i * 50, 10);
+        ctx6.lineTo(25 + i * 50, 140);
+        ctx6.stroke();
+      }
+
+      var ctx7 = getCtx('canvas-7')
+      var lineJoin = ['round', 'bevel', 'miter'];
+      ctx7.lineWidth = 10;
+      for (var i = 0; i < lineJoin.length; i++) {
+        ctx7.lineJoin = lineJoin[i];
+        ctx7.beginPath();
+        ctx7.moveTo(-5, 5 + i * 40);
+        ctx7.lineTo(35, 45 + i * 40);
+        ctx7.lineTo(75, 5 + i * 40);
+        ctx7.lineTo(115, 45 + i * 40);
+        ctx7.lineTo(155, 5 + i * 40);
+        ctx7.stroke();
+      }
+
+      var ctx8 = getCtx('canvas-8')
+      ctx8.strokeStyle = '#09f';
+      ctx8.lineWidth   = 2;
+      ctx8.strokeRect(-5, 50, 160, 50);
+
+      // Set line styles
+      ctx8.strokeStyle = '#000';
+      ctx8.lineWidth = 10;
+
+      ctx8.miterLimit= 5
+
+      // Draw lines
+      ctx8.beginPath();
+      ctx8.moveTo(0, 100);
+      for (i = 0; i < 24 ; i++) {
+        var dy = i % 2 == 0 ? 25 : -25;
+        ctx8.lineTo(Math.pow(i, 1.5) * 2, 75 + dy);
+      }
+      ctx8.stroke();
+
+      march(getCtx('canvas-9'))
+    }
+
+    function march(ctx) {
+      var offset = 0
+      
+      var draw =  function() {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+        ctx.setLineDash([4, 2])
+        ctx.lineDashOffset = offset;
+        ctx.strokeRect(10, 10, 100, 100)
+
+        offset +=1
+
+        if (offset>16) {
+          offset =0
+        }
+      }
+      setInterval(draw, 20)
+    }
+  </script>
+</head>
+<body onload='draw()'>
+  <canvas id='canvas-1' width="150" height="150"></canvas>
+  <canvas id='canvas-2' width="150" height="150"></canvas>
+  <canvas id='canvas-3' width="150" height="150"></canvas>
+  <canvas id='canvas-4' width="150" height="150"></canvas>
+  <canvas id='canvas-5' width="150" height="150"></canvas>
+  <canvas id='canvas-6' width="150" height="150"></canvas>
+  <canvas id='canvas-7' width="150" height="150"></canvas>
+  <canvas id='canvas-8' width="150" height="150"></canvas>
+  <canvas id='canvas-9' width="150" height="150"></canvas>
+</body>
+</html>
