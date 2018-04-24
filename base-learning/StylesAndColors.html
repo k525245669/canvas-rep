@@ -141,6 +141,39 @@
       ctx8.stroke();
 
       march(getCtx('canvas-9'))
+      var ctx10 = getCtx('canvas-10')
+      var lingrad = ctx10.createLinearGradient(0, 0, 0, 150)
+      lingrad.addColorStop(0, '#00ABEB')
+      lingrad.addColorStop(0.5,'#fff')
+      lingrad.addColorStop(0.5, '#26c000')
+      lingrad.addColorStop(1, '#fff')
+      var lingrad2 = ctx10.createLinearGradient(0, 50, 0, 95)
+      lingrad2.addColorStop(0.5,'#000')
+      lingrad2.addColorStop(1,'rgba(0,0,0,0)')
+      ctx10.fillStyle = lingrad
+      ctx10.strokeStyle = lingrad2
+      ctx10.fillRect(10, 10, 130, 130)
+      ctx10.strokeRect(50, 50, 50, 50)
+     
+      var ctx11 = getCtx('canvas-11')
+      var radgrad = ctx11.createRadialGradient(45, 45, 10, 52, 50, 30)
+      radgrad.addColorStop(0, '#A7D30C')
+      radgrad.addColorStop(0.9, '#019F6c')
+      radgrad.addColorStop(1, 'rgba(1,159,98,0)')
+      ctx11.fillRect(0, 0, 150, 150)
+      ctx11.fillStyle= radgrad
+      ctx11.fillRect(0, 0, 150, 150)
+      ctx11.fillStyle= '#A7d30c'
+      ctx11.fillRect(100, 10, 20, 20)
+      ctx11.fillStyle= '#019f6c'
+      ctx11.fillRect(100, 30, 20, 20)
+      ctx11.fillStyle= 'rgba(1, 159, 98, 0.5)'
+      ctx11.fillRect(100, 50, 20, 20)
+      ctx11.strokeStyle='#f00'
+      ctx11.arc(45, 45, 10, 0, 2 * Math.PI)
+      ctx11.stroke()
+      ctx11.arc(52, 50, 30, 0, 2 * Math.PI)
+      ctx11.stroke()
     }
 
     function march(ctx) {
@@ -172,5 +205,6 @@
   <canvas id='canvas-7' width="150" height="150"></canvas>
   <canvas id='canvas-8' width="150" height="150"></canvas>
   <canvas id='canvas-9' width="150" height="150"></canvas>
-</body>
+  <canvas id='canvas-10' width="150" height="150"></canvas>
+  <canvas id='canvas-11' width="150" height="150"></canvas>
 </html>
