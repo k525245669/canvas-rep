@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="common.css">
+  <script type="text/javascript" src='common.js'></script>
+  <script type="text/javascript">
+    function draw() {
+      var ctx1 = getCtx('canvas-1')
+      ctx1.fillRect(0, 0, 150, 150);   // Draw a rectangle with default settings
+      ctx1.save();                  // Save the default state
+     
+      ctx1.fillStyle = '#09F';      // Make changes to the settings
+      ctx1.fillRect(15, 15, 120, 120); // Draw a rectangle with new settings
+
+      ctx1.save();                  // Save the current state
+      ctx1.fillStyle = '#FFF';      // Make changes to the settings
+      ctx1.globalAlpha = 0.5; 
+      ctx1.fillRect(30, 30, 90, 90);   // Draw a rectangle with new settings
+
+      ctx1.restore();               // Restore previous state
+      ctx1.fillRect(45, 45, 60, 60);   // Draw a rectangle with restored settings
+
+      ctx1.restore();               // Restore original state
+      ctx1.fillRect(60, 60, 30, 30);   // Draw a rectangle with restored settings
+
+      var ctx2 = getCtx('canvas-2')
+      for (var i = 0; i < 3; i++) {
+        for (var j = 0; j < 3; j++) {
+          ctx2.save();
+          ctx2.fillStyle = 'rgb(' + (51 * i) + ', ' + (255 - 51 * i) + ', 255)';
+          ctx2.translate(10 + j * 50, 10 + i * 50);
+          ctx2.fillRect(0, 0, 25, 25);
+          ctx2.restore();
+        }
+      }
+
+      var ctx3 = getCtx('canvas-3')
+      ctx3.fillStyle = 'rgb(150, 150, 0)'
+      ctx3.fillRect(30,30, 50, 50)
+      ctx3.save()
+      ctx3.fillStyle = 'rgb(0, 0, 0)'
+      ctx3.translate(55, 55)
+      ctx3.rotate(degree2radian(30))
+      ctx3.translate(-55, -55)
+      ctx3.fillRect(30, 30, 50, 50)
+      ctx3.restore()
+      ctx3.save()
+      ctx3.fillRect(0, 0, 50, 50)
+      ctx3.rotate(degree2radian(30))
+      ctx3.fillStyle = 'rgb(0, 0, 0)'
+      ctx3.fillRect(0, 0, 50, 50)
+      ctx3.strokeStyle = '#f00'
+      //ctx3.translate(10,10)
+      ctx3.beginPath()
+      ctx3.moveTo(0, 0)
+      ctx3.lineTo(200, 0)
+      ctx3.moveTo(0, 0)
+      ctx3.lineTo(0, 200)
+      ctx3.stroke()
+      ctx3.restore()
+
+      ctx3.save()
+      ctx3.translate(25, 25)
+      ctx3.rotate(degree2radian(30))
+      ctx3.strokeStyle = '#0f0'
+      ctx3.beginPath()
+      ctx3.moveTo(0, 0)
+      ctx3.lineTo(200, 0)
+      ctx3.moveTo(0, 0)
+      ctx3.lineTo(0, 200)
+      ctx3.stroke()
+
+      var ctx4 = getCtx('canvas-4')
+
+      ctx4.save()
+      ctx4.scale(10, 3)
+      ctx4.fillRect(1,1, 10, 10)
+      ctx4.restore()
+
+      ctx4.save()
+      ctx4.scale(-1, 1)
+      ctx4.font = '48px serif'
+      ctx4.textAlign = 'start'
+      ctx4.textBaseline = 'alphabetic'
+      ctx4.fillText('MDN', -120, 120)
+      ctx4.beginPath()
+      ctx4.moveTo(-120, 120)
+      ctx4.lineTo(0, 120)
+      ctx4.moveTo(-120, 120)
+      ctx4.lineTo(-120, 0)
+      ctx4.strokeStyle= '#f00'
+      ctx4.stroke()
+      ctx4.restore()
+
+      ctx4.translate(150, 75)
+      ctx4.scale(1, -1)
+      ctx4.strokeStyle= '#f00'
+      ctx4.beginPath()
+      ctx4.moveTo(0, 0)
+      ctx4.lineTo(0, 100)
+      ctx4.moveTo(0, 0)
+      ctx4.lineTo(100, 0)
+      ctx4.stroke()
+      ctx4.fillRect(10, 10, 50, 50)
+      
+      var ctx5 = getCtx('canvas-5')
+      var sin = Math.sin(Math.PI / 6)
+      var cos = Math.cos(Math.PI / 6)
+      ctx5.translate(100, 100)
+      var c = 0
+      for (var i = 0; i <= 12; i++) {
+        c = Math.floor(255/12 * i)
+        ctx5.fillStyle = `rgb(${c}, ${c},${c})`
+        ctx5.transform(cos, sin, -sin, cos, 0, 0)
+        ctx5.fillRect(0, 0, 100, 10)
+      } 
+
+      ctx5.setTransform(-1, 0, 0, 1, 100, 100)
+      ctx5.fillStyle = 'rgba(255, 128, 255, 0.5)'
+      ctx5.fillRect(0, 50, 100, 100)
+
+    }
+
+    function degree2radian(degree) {
+      return (Math.PI/ 180) * degree
+    }
+  </script>
+</head>
+<body onload='draw()'>
+  <canvas id='canvas-1' width="150" height="150"></canvas>
+  <canvas id='canvas-2' width="150" height="150"></canvas>
+  <canvas id='canvas-3' width="150" height="150"></canvas>
+  <canvas id='canvas-4' width="300" height="150"></canvas>
+  <canvas id='canvas-5' width="300" height="300"></canvas>
+
+
+</body>
+</html>
