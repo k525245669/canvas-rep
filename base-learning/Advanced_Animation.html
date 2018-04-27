@@ -1,0 +1,80 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="common.css">
+  <script type="text/javascript" src='common.js'></script>
+  <script type="text/javascript">
+    var ball = {
+      x: 20,
+      y: 20,
+      r: 20,
+      validaty_x: 4,
+      validaty_y: 2,
+      draw: function(ctx) {
+        ctx.save()
+        ctx.fillStyle='#04f'
+        ctx.beginPath()
+        ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI)
+        ctx.fill()
+      } 
+    }
+    var running = false
+    function clear() {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+    }
+    function draw() {
+      clear()   
+      ball.validaty_y *= .99
+      ball.validaty_y += .25
+      ball.x = ball.x + ball.validaty_x
+      ball.y = ball.y + ball.validaty_y
+      if (ball.x + ball.validaty_x > ctx.canvas.width || ball.x + ball.validaty_x< 0){
+         ball.validaty_x = -ball.validaty_x
+      }
+     
+      if (ball.y + ball.validaty_y > ctx.canvas.height || ball.y + ball.validaty_y< 0){
+         ball.validaty_y = -ball.validaty_y
+      }
+      ball.draw(ctx)
+      raf = window.requestAnimationFrame(draw)
+    }
+    function init() {
+      ctx = getCtx('canvas-1')
+      ball.draw(ctx)
+      ctx.canvas.addEventListener('mouseover', function() {
+         if (running) {
+           raf = window.requestAnimationFrame(draw)
+         }
+      })
+      ctx.canvas.addEventListener('mouseout', function () {
+        if (raf) {
+         window.cancelAnimationFrame(raf)
+        }
+      })    
+      ctx.canvas.addEventListener('click', function () {
+        if (!running) {
+          running = true
+          draw()
+        }
+      })   
+      ctx.canvas.addEventListener('mousemove', function(e) {
+        if (!running) {
+          clear()
+          ball.x = e.clientX
+          ball.y = e.clientY
+          ball.draw(ctx)
+        }
+      })
+    }
+
+
+  </script>
+</head>
+<body onload='init()'>
+  <canvas id='canvas-1' width="600" height="300"></canvas>
+</body>
+</html>
