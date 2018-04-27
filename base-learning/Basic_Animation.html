@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="common.css">
+  <script type="text/javascript" src='common.js'></script>
+  <script type="text/javascript">
+    function draw() {
+      var ctx1 = getCtx('canvas-1')
+      ctx1.globalCompositeOperation = 'destination-over'
+      
+      ctx1.clearRect(0, 0, 300, 300)
+      ctx1.save()
+      ctx1.translate(150, 150)
+      var time = new Date()
+      // draw earth
+      ctx1.rotate((Math.PI * 2)/60 * time.getSeconds() + (Math.PI*2)/60000* time.getMilliseconds())
+      ctx1.translate(120, 0)
+      ctx1.beginPath()
+      ctx1.arc(0, 0, 10, 0, Math.PI*2)
+      ctx1.fillStyle = '#08f'
+      ctx1.fill()
+
+      // draw moon
+      ctx1.rotate((Math.PI * 2)/6 * time.getSeconds() + (Math.PI*2)/6000* time.getMilliseconds())
+      ctx1.translate(20, 0)
+      ctx1.beginPath()
+      ctx1.arc(0, 0, 3, 0, Math.PI*2)
+      ctx1.fillStyle = '#ff0'
+      ctx1.fill()
+      ctx1.restore()
+
+      // draw earth track
+      ctx1.save()
+      ctx1.translate(150, 150)
+      ctx1.beginPath()
+      ctx1.arc(0, 0, 120, 0 , Math.PI*2)
+      ctx1.strokeStyle = 'rgba(200, 200, 200, .4)'
+      ctx1.stroke()
+      ctx1.restore()
+
+      ctx1.fillStyle = '#e20'
+      ctx1.beginPath()
+      ctx1.arc(150, 150, 30, 0, Math.PI * 2)
+      ctx1.fill()
+      ctx1.fillStyle = '#000'
+      ctx1.fillRect(0, 0, 300, 300)
+    
+
+      // draw clock
+      var ctx2 = getCtx('canvas-2')
+      ctx2.clearRect(0, 0, 300, 300)
+      ctx2.strokeStyle = '#08f'
+      ctx2.beginPath()
+      ctx2.arc(150, 150, 140, 0, Math.PI * 2)
+      ctx2.lineWidth = 10
+      ctx2.stroke()
+
+      ctx2.save()
+      ctx2.translate(150, 150)
+      ctx2.lineWidth = 1
+      for(let i = 0; i<=59; i++) {
+        ctx2.save()
+        ctx2.rotate(Math.PI * 2 / 60 * i)
+        ctx2.beginPath()
+        if (i%5==0) {
+          ctx2.save()
+          ctx2.lineWidth = 3
+          ctx2.moveTo(120, 0 )
+          ctx2.lineTo(135, 0)
+          ctx2.stroke()
+          ctx2.restore()
+        }
+        ctx2.moveTo(130, 0)
+        ctx2.lineTo(135, 0)
+        ctx2.stroke()
+        ctx2.restore()
+      }
+      ctx2.globalCompositeOperation = 'destination-over'
+      var time =new Date()
+      // draw seconds
+      ctx2.save()
+      ctx2.rotate(Math.PI * 2 / 60 * time.getSeconds() )
+      ctx2.strokeStyle = '#f50'
+      ctx2.lineWidth = 3
+      ctx2.beginPath()
+      ctx2.moveTo(0, 0)
+      ctx2.lineTo(0, -110)
+      ctx2.stroke()
+      ctx2.restore()
+      // draw minutes
+      ctx2.save()
+      ctx2.rotate(Math.PI * 2 / 60 * time.getMinutes() + Math.PI * 2/ 3600 *time.getSeconds() )
+      ctx2.strokeStyle = '#000'
+      ctx2.lineWidth = 5
+      ctx2.beginPath()
+      ctx2.moveTo(0, 0)
+      ctx2.lineTo(0, -100)
+      ctx2.stroke()
+      ctx2.restore()
+      // draw hours
+      ctx2.save()
+      ctx2.rotate(Math.PI * 2 / 12  * time.getHours() + Math.PI * 2 /12 /60 * time.getMinutes() )
+      ctx2.strokeStyle = '#000'
+      ctx2.lineWidth = 10
+      ctx2.beginPath()
+      ctx2.moveTo(0, 0)
+      ctx2.lineTo(0, -90)
+      ctx2.stroke()
+      ctx2.restore()
+      ctx2.restore() 
+      
+      window.requestAnimationFrame(draw)
+    }
+    window.requestAnimationFrame(draw)
+  </script>
+</head>
+<body onload='draw()'>
+  <canvas id='canvas-1' width="300" height="300"></canvas>
+  <canvas id='canvas-2' width="300" height="300"></canvas>
+</body>
+</html>
