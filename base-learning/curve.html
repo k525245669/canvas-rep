@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <style type="text/css">
+    #canvas {
+      border: 1px solid #333;
+
+    }
+  </style>
+  <script type="text/javascript">
+    function draw () {
+      mCanvas = document.getElementById('canvas')
+      mCanvas.width = document.body.clientWidth
+      mCanvas.height = 200
+      mCtx = mCanvas.getContext('2d')
+
+      curDelta = 0
+      aniDelta = 1
+
+      setInterval(drawDoubleCurve, 60)
+
+    }
+
+    function drawDoubleCurve() {
+      mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height)
+
+      var lineargradient = mCtx.createLinearGradient(0, 200, mCanvas.width ,200)
+      lineargradient.addColorStop(0, '#96BEF0')
+      lineargradient.addColorStop(1, '#99E9F0')
+      mCtx.fillStyle = lineargradient
+
+      drawCurve(60 + curDelta, 60 - curDelta, curDelta/3)
+
+      var lineargradient2 = mCtx.createLinearGradient(0, 200, mCanvas.width ,200)
+      lineargradient2.addColorStop(0, '#C3C5ED')
+      lineargradient2.addColorStop(1, '#CDEBFF')
+      mCtx.fillStyle = lineargradient2
+      drawCurve( 90 - curDelta, 80 + curDelta, 20, curDelta/2)
+      
+
+      curDelta += aniDelta
+      
+      if (curDelta >= 10 && aniDelta>0 || curDelta <=-10 && aniDelta<0) {
+        aniDelta  = - aniDelta
+      }
+    }
+
+    function drawCurve(curveDeltaDown, curveDeltaUp, yDelta = 0, xDelta = 0) {
+      mCtx.beginPath()
+
+      var width = mCanvas.width
+      var height = mCanvas.height
+
+      pointStart = {
+        x: 0,
+        y: yDelta + height/4
+      }
+
+      pointA = {
+        x: width/3 + xDelta,
+        y: yDelta + height/2
+      }
+
+      contro1 = {
+        x: width/3/2 ,
+        y: yDelta + (height/2 + curveDeltaDown)
+      }
+
+      pointB = {
+        x: width * 2/3 - xDelta,
+        y: yDelta + height/2
+      }
+
+      contro2 = {
+        x: width * 1/2,
+        y: yDelta + (height/2 - curveDeltaUp)
+      }
+
+      pointC = {
+        x: width,
+        y: yDelta + height/4
+      }
+
+      contro3 = {
+        x: width * 5/6 - xDelta,
+        y: yDelta + (height/2 + curveDeltaDown)
+      }
+
+      mCtx.moveTo(pointStart.x, pointStart.y)
+      CureveTo(contro1, pointA)
+      CureveTo(contro2, pointB)
+      CureveTo(contro3, pointC)
+      mCtx.lineTo(mCanvas.width, height)
+      mCtx.lineTo(pointStart.x, height)
+      mCtx.lineTo(pointStart.x, pointStart.y)
+      mCtx.fill()
+    }
+
+    function CureveTo(Control, End) {
+      mCtx.quadraticCurveTo(Control.x, Control.y, End.x, End.y)
+    }
+  </script>
+</head>
+<body onload='draw()'>
+  <canvas id='canvas'></canvas>
+</body>
+</html>
