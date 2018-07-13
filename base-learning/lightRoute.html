@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <script type="text/javascript">
+
+    function Path(pointStart, pointEnd) {
+      this.start = pointStart
+      this.end = pointEnd
+      this.distence = this.getDistance()
+      this.offset = 0
+      this.animateStep = 1
+    }
+
+    Path.prototype.getDistance = function() {
+      return Math.sqrt(Math.pow(this.start.x - this.end.x, 2) + Math.pow(this.start.y - this.end.y, 2))
+    }
+
+    Path.prototype.getOffsetPoint = function() {
+      if (this.offset >= this.distence) {
+        return this.end
+      }
+      var x = this.start.x + (this.offset * (this.end.x - this.start.x) / this.distence)
+      var y = this.start.y + (this.offset * (this.end.y - this.start.y) / this.distence)
+      return new Point('offset', x, y)
+    }
+
+    Path.prototype.draw = function() {
+      if (this.animateStep === 1) {
+        this.offset += 10
+        this.linkLine()
+        if (this.offset >= this.distence) {
+          this.animateStep = 2
+          this.offset = 0
+        }
+      } else {
+        this.offset -= 1
+        this.animateLine()
+        if (this.offset <= -15) {
+          this.offset =0
+        }
+      }
+    }
+
+    Path.prototype.linkLine = function () {
+      var offsetPoint = this.getOffsetPoint()
+      ctx.save()
+      ctx.setLineDash([10, 5])
+      ctx.beginPath()
+      ctx.moveTo(this.start.x, this.start.y)
+      ctx.lineTo(offsetPoint.x, offsetPoint.y)
+      ctx.stroke()
+      ctx.restore()
+    }
+
+    Path.prototype.animateLine = function() {
+      ctx.beginPath()
+      ctx.moveTo(this.start.x, this.start.y)
+      ctx.lineTo(this.end.x, this.end.y)
+      ctx.save()
+      ctx.setLineDash([10, 5])
+      ctx.lineDashOffset = this.offset
+      ctx.stroke()
+      ctx.restore()
+    }
+
+    function Rect(centerPoint, width, color) {
+      this.center = centerPoint
+      this.width = width
+      this.color = color || '#333'
+    }
+
+    Rect.prototype.draw = function (ctx) {
+      ctx.save()
+      ctx.fillStyle = this.color
+      var x = this.center.x
+      var y = this.center.y
+      var w = this.width
+      ctx.fillRect(x-w/2, y-w/2, w, w)
+      ctx.restore()
+
+      this.center.DrawName()
+    }
+
+    function Point(name, x, y) {
+      this.name = name
+      this.x = x
+      this.y = y
+      return this
+    }
+
+    Point.prototype.DrawName = function() {
+      ctx.save()
+      ctx.fillStyle='#fff'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(this.name, this.x, this.y)
+      ctx.restore()
+    }
+
+    function init() {
+      canvas = document.getElementById('mCanvas')
+      ctx = canvas.getContext('2d')
+
+      pointA = new Point('A', 500, 150)
+      pointB = new Point('B', 700, 250)
+      pointC = new Point('C', 200, 150)
+      pointD = new Point('D', 100, 250)
+      pointCloud = new Point('Cloud', 400, 250)
+      pointClient = new Point('Client', 400, 450)
+
+      rects = []
+      rects.push(new Rect(pointCloud, 100, '#000'))
+      rects.push(new Rect(pointClient, 50, '#888'))
+      rects.push(new Rect(pointA, 50))
+      rects.push(new Rect(pointB, 50))
+      rects.push(new Rect(pointC, 50))
+      rects.push(new Rect(pointD, 50))
+
+      paths = []
+      paths.push(new Path(pointA, pointCloud))
+      paths.push(new Path(pointB, pointCloud))
+      paths.push(new Path(pointC, pointCloud))
+      paths.push(new Path(pointD, pointCloud))
+
+      startAnimate()
+    }
+
+    function startAnimate() {
+      
+      var draw = function () {
+        clear()
+
+        for (var i = paths.length - 1; i >= 0; i--) {
+          var path = paths[i]
+          path.draw()
+        }
+
+        if (paths.length === 4) {
+          var needAddClientPath = paths.every(path => path.animateStep === 2)
+          if (needAddClientPath) {
+            paths.push(new Path(pointCloud, pointClient))
+          }
+        }
+        drawRects()
+      }
+      setInterval(draw, 60)
+    }
+
+    function clear() {
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+    }
+
+    function drawRects() {
+      for (var i = rects.length - 1; i >= 0; i--) {
+        var rect = rects[i]
+        rect.draw(ctx)
+      }
+    }
+
+  </script>
+</head>
+<style>
+  canvas {
+    background-color: #eee;
+  }
+</style>
+<body onload="init()">
+  <canvas id='mCanvas' width='800px' height="500px"></canvas>
+</body>
+</html>
