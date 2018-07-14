@@ -9,39 +9,62 @@
       this.end = pointEnd
       this.distence = this.getDistance()
       this.offset = 0
-      this.animateStep = 1
+      this.animateStep = 1  // 1为连接， 2为位移
     }
 
-    Path.prototype.getDistance = function() {
-      return Math.sqrt(Math.pow(this.start.x - this.end.x, 2) + Math.pow(this.start.y - this.end.y, 2))
+    //设置为圆弧模式，此处为了减少计算的代码量，需人工传入 圆心坐标 起始角度 终点角度
+    Path.prototype.setArcMode = function(centerPoint, r, startAngle, endAngle, antiClock) {
+      this.arcMode = true
+      this.center = centerPoint  //圆弧中心
+      this.r = r //圆弧半径
+      this.startAngle = startAngle  //起始角度
+      this.endAngle = endAngle //终点角度
+      this.antiClock = antiClock || false  //是否逆时针
     }
 
-    Path.prototype.getOffsetPoint = function() {
-      if (this.offset >= this.distence) {
-        return this.end
-      }
-      var x = this.start.x + (this.offset * (this.end.x - this.start.x) / this.distence)
-      var y = this.start.y + (this.offset * (this.end.y - this.start.y) / this.distence)
-      return new Point('offset', x, y)
+    // 设置下一段路径，用于拼接路径形成更长的路径
+    Path.prototype.setNextPath = function(path) {
+      this.nextPath = path
     }
 
+    // 绘制
     Path.prototype.draw = function() {
       if (this.animateStep === 1) {
         this.offset += 10
-        this.linkLine()
+        if (this.arcMode) {
+          this.linkArc()
+        } else {
+          this.linkLine()
+        }
         if (this.offset >= this.distence) {
-          this.animateStep = 2
-          this.offset = 0
+          //如果连接完成，且有下一段路径，开始绘制下一段路径的连接动画
+          if (this.nextPath) {
+            this.nextPath.draw()
+          }
+          //如果没有下一段路径 或 下一段路径已经完成连接，则本路径进入位移动画
+          if (!this.nextPath || this.nextPath.animateStep === 2) {
+            this.animateStep = 2
+            this.offset = 0
+          }
         }
       } else {
         this.offset -= 1
-        this.animateLine()
+        if (this.arcMode) {
+          this.animateArc()
+        } else {
+          this.animateLine()
+        }
         if (this.offset <= -15) {
           this.offset =0
+        }
+
+        if (this.nextPath) {
+          this.nextPath.draw()
         }
       }
     }
 
+    // 连接直线动画
     Path.prototype.linkLine = function () {
       var offsetPoint = this.getOffsetPoint()
       ctx.save()
@@ -53,6 +76,7 @@
       ctx.restore()
     }
 
+    // 直线位移动画
     Path.prototype.animateLine = function() {
       ctx.beginPath()
       ctx.moveTo(this.start.x, this.start.y)
@@ -63,6 +87,53 @@
       ctx.stroke()
       ctx.restore()
     }
+
+    // 连接圆弧动画
+    Path.prototype.linkArc = function () {
+      var offsetAngle = this.getOffsetAngle()
+      ctx.beginPath()
+      ctx.arc(this.center.x, this.center.y, this.r, this.startAngle, offsetAngle, this.antiClock)
+      ctx.save()
+      ctx.setLineDash([10, 5])
+      ctx.stroke()
+      ctx.restore()
+    }
+
+    // 圆弧位移动画
+    Path.prototype.animateArc = function() {
+      ctx.beginPath()
+      ctx.arc(this.center.x, this.center.y, this.r, this.startAngle, this.endAngle, this.antiClock)
+      ctx.save()
+      ctx.setLineDash([10, 5])
+      ctx.lineDashOffset = this.offset
+      ctx.stroke()
+      ctx.restore()
+    }
+
+    // 获取起始点与结束点的距离
+    Path.prototype.getDistance = function() {
+      return Math.sqrt(Math.pow(this.start.x - this.end.x, 2) + Math.pow(this.start.y - this.end.y, 2))
+    }
+
+    // 获取直线模式下，当前offset对应点坐标
+    Path.prototype.getOffsetPoint = function() {
+      if (this.offset >= this.distence) {
+        return this.end
+      }
+      var x = this.start.x + (this.offset * (this.end.x - this.start.x) / this.distence)
+      var y = this.start.y + (this.offset * (this.end.y - this.start.y) / this.distence)
+      return new Point('offset', x, y)
+    }
+
+    // 获取圆弧模式下，当前offset对应的弧度
+    Path.prototype.getOffsetAngle = function() {
+      if (this.offset>= this.distence) {
+        return this.endAngle
+      }
+      return this.startAngle + ((this.endAngle - this.startAngle) * this.offset/ this.distence)
+    }
+
+    
 
     function Rect(centerPoint, width, color) {
       this.center = centerPoint
@@ -78,7 +149,6 @@
       var w = this.width
       ctx.fillRect(x-w/2, y-w/2, w, w)
       ctx.restore()
-
       this.center.DrawName()
     }
 
@@ -94,7 +164,8 @@
       ctx.fillStyle='#fff'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText(this.name, this.x, this.y)
+      ctx.fillText(this.name, this.x, this.y-5)
+      ctx.fillText(`(${this.x}, ${this.y})`, this.x, this.y+5)
       ctx.restore()
     }
 
@@ -103,26 +174,74 @@
       ctx = canvas.getContext('2d')
 
       pointA = new Point('A', 500, 150)
+      pointA1 = new Point('A-1', 600, 150)
+      pointA2 = new Point('A-2', 550, 100)
       pointB = new Point('B', 700, 250)
-      pointC = new Point('C', 200, 150)
+      pointC = new Point('C', 180, 150)
+      pointC1 = new Point('C-1', 180, 100)
       pointD = new Point('D', 100, 250)
+      pointE = new Point('E', 300, 100)
+      pointF = new Point('F', 400, 50)
       pointCloud = new Point('Cloud', 400, 250)
-      pointClient = new Point('Client', 400, 450)
+      pointClient = new Point('Client', 400, 400)
+      addClient = false //是否添加了云到端的路径
 
       rects = []
       rects.push(new Rect(pointCloud, 100, '#000'))
       rects.push(new Rect(pointClient, 50, '#888'))
       rects.push(new Rect(pointA, 50))
+      rects.push(new Rect(pointA1, 40))
+      rects.push(new Rect(pointA2, 40))
       rects.push(new Rect(pointB, 50))
       rects.push(new Rect(pointC, 50))
+      rects.push(new Rect(pointC1, 40))
       rects.push(new Rect(pointD, 50))
+      rects.push(new Rect(pointE, 50))
+      rects.push(new Rect(pointF, 50))
 
-      paths = []
-      paths.push(new Path(pointA, pointCloud))
+      paths = [] //所有路径的集合，各路径间无关联，集合内所有的路径同时开始绘制，。
+
+      var pathA1toA = new Path(pointA1, pointA)
+      var pathA2toA = new Path(pointA2, pointA)
+      pathA2toA.setArcMode(new Point('CircleCenter', 550, 150), 50, -Math.PI/2, -Math.PI, true)
+
+      // A到Cloud的中间点
+      var pointMidAtoCloud= new Point('MidAtoCloud', 500, 200)
+      // A到中间点
+      var pathAtoMid = new Path(pointA, pointMidAtoCloud)
+      // 中间点到Cloud
+      var pathMidtoCloud = new Path(pointMidAtoCloud, pointCloud)
+      //连接 AtoMid 与 MidtoCloud线段
+      pathAtoMid.setNextPath(pathMidtoCloud)
+      //todo 此处人工计算圆心的中心坐标及起始结束角度，需要优化。。
+      var pointCircleCenter = new Point('CircleCenter', 450, 200)
+      pathMidtoCloud.setArcMode(pointCircleCenter, 50, 0, Math.PI/2)
+
+      //连接 A1toA 与 AtoMid线段，连接后完整线段为 点A1到点Cloud
+      pathA1toA.setNextPath(pathAtoMid)
+      
+      paths.push(pathA1toA)
+      paths.push(pathA2toA)
+      
       paths.push(new Path(pointB, pointCloud))
-      paths.push(new Path(pointC, pointCloud))
+
+      var pathC1toC = new Path(pointC1, pointC)
+      var pathCtoCloud = new Path(pointC, pointCloud)
+      pathCtoCloud.setArcMode(new Point('CircleCenter', 350, 50), 200, Math.PI * 1.6 /2, Math.PI/2, true)
+      pathC1toC.setNextPath(pathCtoCloud)
+      paths.push(pathC1toC)
+
       paths.push(new Path(pointD, pointCloud))
 
+      var pointMidEtoCloud = new Point('MidEtoCloud', 300, 200)
+      var pathEtoMid = new Path(pointE, pointMidEtoCloud)
+      var pathMidtoCloud = new Path(pointMidEtoCloud, pointCloud)
+      pathEtoMid.setNextPath(pathMidtoCloud)
+      var pointCircleCenter = new Point('CircleCenter', 350, 200)
+      pathMidtoCloud.setArcMode(pointCircleCenter, 50, Math.PI, Math.PI/2, true)
+      paths.push(pathEtoMid)
+
+      paths.push(new Path(pointF, pointCloud))
       startAnimate()
     }
 
@@ -132,13 +251,14 @@
         clear()
 
         for (var i = paths.length - 1; i >= 0; i--) {
-          var path = paths[i]
-          path.draw()
+          paths[i].draw()
         }
 
-        if (paths.length === 4) {
+        if (!addClient) {
+          // 所有点到云的路径连接是否完成
           var needAddClientPath = paths.every(path => path.animateStep === 2)
           if (needAddClientPath) {
+            addClient = true
             paths.push(new Path(pointCloud, pointClient))
           }
         }
