@@ -10,10 +10,10 @@
       this.offset = 0
       this.initDashOffset = initDashOffset || 0  //用于解决 两段路径拼接时，虚线不连贯的问题
       this.animateStep = 1  // 1为连接， 2为位移
-      this.withLight = true //是否绘制光线的开关
+      this.withLight = false //是否绘制光线的开关
       this.lightOffset = 0
       this.drawLight = false  //当前是否应该绘制光线，因为涉及到前后子路径的顺序问题
-      this.dashMode = false
+      this.dashMode = true
       this.halfLineWidh = 2
     }
 
@@ -46,7 +46,7 @@
     // 绘制
     Path.prototype.draw = function() {
       ctx.save()
-      ctx.strokeStyle = '#BA2400'
+      ctx.strokeStyle = '#f00'
       if (this.animateStep === 1) {
         this.offset += 3
         if (this.arcMode) {
