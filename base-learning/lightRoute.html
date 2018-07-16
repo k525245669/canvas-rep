@@ -87,7 +87,6 @@
 
         if (this.withLight && this.drawLight) {
          
-          
           if (this.arcMode) {
              this.lightOffset += 2
             this.drawLightArcRoute()
@@ -193,12 +192,6 @@
     // 画光点
     Path.prototype.drawLightRoute = function() {
 
-      // if (this.lightOffset > this.distence) {
-      //   var offsetPoint = this.getOffsetPoint(this.lightOffset, true)
-      // } else {
-
-      // }
-
       var offsetPoint = this.getOffsetPoint(this.lightOffset, true)
       topCtx.save()
       
@@ -282,24 +275,6 @@
       topCtx.beginPath()
       
       var delta = offsetAngle - this.startAngle
-      //var halfAngle = (this.endAngle - this.startAngle) * 2/ 3
-      //if (Math.abs(delta) > Math.abs(halfAngle)) {
-        //console.log(delta, halfAngle)
-        //delta = halfAngle
-      //}
-
-      // if (this.center.x === 410) {
-      //   console.log(this.distence, this.lightOffset)
-      //   //console.log(delta)
-      // }
-
-      // // test
-      // topCtx.beginPath()
-      // topCtx.arc(x, y, 3, 0, 2 * Math.PI)
-      // topCtx.fillStyle = '#f00'
-      // topCtx.fill()
-      // topCtx.restore()
-      // return
 
       if (this.lightOffset < this.distence) {
         topCtx.arc(this.center.x, this.center.y, this.r, offsetAngle - delta, offsetAngle, this.antiClock)
@@ -488,6 +463,10 @@
 
       intervalId = null
       startAnimate()
+
+      drawImgs()
+
+      addMouseMoveEvent()
     }
 
     function startAnimate() {
@@ -540,18 +519,63 @@
       }
     }
 
+    function drawImgs() {
+      var imgCanvas = document.getElementById('imgCanvas')
+      var ctx = imgCanvas.getContext('2d')
+
+      var img1 = document.getElementById('img1')
+      var img2 = document.getElementById('img2')
+      var img3 = document.getElementById('img3')
+      
+      ctx.drawImage(img1, 380, 130, img1.width/2, img1.height/2)
+      ctx.drawImage(img2, 0, 0, img2.width/2, img2.height/2)
+      ctx.drawImage(img3, 407, 380, img3.width/2, img3.height/2)
+    }
+
+    function addMouseMoveEvent() {
+      var box = document.querySelector('.m-box')
+
+      var time = 0
+
+      document.addEventListener('mousemove', function move(e) {
+        if (time++ % 10 !==0) return
+
+        // console.log(e.pageX, e.pageY)
+        var x = (e.pageY / 500 - 0.5) * 5 
+        var y = (e.pageX / document.documentElement.clientWidth - 0.5) * -5
+
+        box.style.transform = `rotateX(${x}deg) rotateY(${y}deg)`
+      })
+
+    }
+
   </script>
 </head>
 <style>
   body {
     background-color: #333;
+    text-align: center;
   }
+  .m-container {
+    transform-style: preserve-3d;
+    perspective: 500px;
+  }
+
   .m-box {
-    position: relative;
+    height: 500px;
+    margin: 0 auto;
+    position: relative;  
+    -webkit-transition: all 0.5s ease-out;
+    -moz-transition: all 0.5s ease-out;
+    -o-transition: all 0.5s ease-out;
+    transition: all 0.5s ease-out;
+    -webkit-transform: rotateX(0deg) rotateY(0deg);
   }
   canvas {
     position: absolute;
     left: 0;
+    right: 0;
+    margin: 0 auto;
     top: 0;
     z-index: 0;
   }
@@ -561,6 +585,7 @@
   }
 
   .solution-1 {
+    display: none;
     position: absolute;
     width: 402px;
     height: 261px;
@@ -569,12 +594,14 @@
     z-index: 2;
   }
   .solution-2 {
+    display: none;
     position: absolute;
     width: 1194px;
     height: 411px;
     z-index: 2;
   }
   .solution-3 {
+    display: none;
     position: absolute;
     left: 407px;
     top: 380px;
@@ -584,13 +611,16 @@
   }
 </style>
 <body onload="init()">
-  <button onclick="reset()"> reset </button>
-  <div class='m-box'>
-    <canvas id='topCanvas' width='1200px' height="500px"></canvas>
-    <canvas id='mCanvas' width='1200px' height="500px"></canvas>
-    <img class='solution-1' src='./solution-1.png'/>
-    <img class='solution-2' src='./cloud.png'/>
-    <img class='solution-3' src='./solution-3.png?v=2'/>
+  <div class='m-container'>
+    <div class='m-box' style='transform: rotateX(0deg) rotateY(0deg);'>
+      <canvas id='topCanvas' width='1200px' height="550px"></canvas>
+      <canvas id='mCanvas' width='1200px' height="550px"></canvas>
+      <canvas id='imgCanvas' width="1200px" height="550px"></canvas>
+      <img id='img1' class='solution-1' src='./solution-1.png'/>
+      <img id='img2' class='solution-2' src='./cloud.png'/>
+      <img id='img3' class='solution-3' src='./solution-3.png?v=2'/>
+    </div>
   </div>
+  <button onclick="reset()" style='margin-top: 100px;'> reset </button>
 </body>
 </html>
