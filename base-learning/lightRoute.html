@@ -3,13 +3,16 @@
 <head>
   <title></title>
   <script type="text/javascript">
-
-    function Path(pointStart, pointEnd) {
+    function Path(pointStart, pointEnd, initDashOffset, withLight) {
       this.start = pointStart
       this.end = pointEnd
       this.distence = this.getDistance()
       this.offset = 0
+      this.initDashOffset = initDashOffset || 0  //用于解决 两段路径拼接时，虚线不连贯的问题
       this.animateStep = 1  // 1为连接， 2为位移
+      this.withLight = true //是否绘制光线的开关
+      this.lightOffset = 0
+      this.drawLight = false  //当前是否应该绘制光线，因为涉及到前后子路径的顺序问题
     }
 
     //设置为圆弧模式，此处为了减少计算的代码量，需人工传入 圆心坐标 起始角度 终点角度
@@ -25,10 +28,23 @@
     // 设置下一段路径，用于拼接路径形成更长的路径
     Path.prototype.setNextPath = function(path) {
       this.nextPath = path
+      path.prePath = this
+      path.rootPath = this.rootPath || this
+    }
+
+    // 设置等待路径，等到waitPath开启位移动画后，本路径才开启位移动画
+    Path.prototype.setAnimateWaitFor = function(path) {
+      this.waitPath = path
+      
+      if (this.nextPath) {
+        this.nextPath.setAnimateWaitFor(path)
+      }
     }
 
     // 绘制
     Path.prototype.draw = function() {
+      ctx.save()
+      ctx.strokeStyle = '#BA2400'
       if (this.animateStep === 1) {
         this.offset += 10
         if (this.arcMode) {
@@ -41,10 +57,19 @@
           if (this.nextPath) {
             this.nextPath.draw()
           }
+
+          // 如果有等待的路径，并且等待的路径未建立完路径
+          if (this.waitPath && this.waitPath.animateStep === 1) {
+            return
+          }
+
           //如果没有下一段路径 或 下一段路径已经完成连接，则本路径进入位移动画
           if (!this.nextPath || this.nextPath.animateStep === 2) {
             this.animateStep = 2
             this.offset = 0
+            if (!this.rootPath) {
+              this.drawLight = true
+            }
           }
         }
       } else {
@@ -58,17 +83,56 @@
           this.offset =0
         }
 
+        if (this.withLight && this.drawLight) {
+          this.lightOffset += 2
+          
+          if (this.arcMode) {
+            this.drawLightArcRoute()
+          } else {
+            this.drawLightRoute()
+          }
+
+          if (this.lightOffset >= this.distence) {
+            this.overLength = this.lightOffset - this.distence
+            
+            if (this.nextPath) {
+              this.nextPath.preOverLength = this.overLength
+
+              if (!this.nextPath.drawLight) {
+                this.nextPath.lightOffset = 0
+                this.nextPath.drawLight = true
+              }
+            } else {
+              this.resetLightRoute()
+            }
+          }
+        }
+
         if (this.nextPath) {
           this.nextPath.draw()
         }
+      }
+      ctx.restore()
+    }
+
+    Path.prototype.resetLightRoute = function() {
+      var root = this.rootPath || this
+      root.lightOffset = 0
+      var path = root.nextPath
+
+      while(path) {
+        path.drawLight = false
+        path.lightOffset = 0
+        path = path.nextPath
       }
     }
 
     // 连接直线动画
     Path.prototype.linkLine = function () {
-      var offsetPoint = this.getOffsetPoint()
+      var offsetPoint = this.getOffsetPoint(this.offset)
       ctx.save()
       ctx.setLineDash([10, 5])
+      ctx.lineDashOffset = this.initDashOffset
       ctx.beginPath()
       ctx.moveTo(this.start.x, this.start.y)
       ctx.lineTo(offsetPoint.x, offsetPoint.y)
@@ -83,18 +147,19 @@
       ctx.lineTo(this.end.x, this.end.y)
       ctx.save()
       ctx.setLineDash([10, 5])
-      ctx.lineDashOffset = this.offset
+      ctx.lineDashOffset = this.offset + this.initDashOffset  //通过改变offset实现位移动画
       ctx.stroke()
       ctx.restore()
     }
 
     // 连接圆弧动画
     Path.prototype.linkArc = function () {
-      var offsetAngle = this.getOffsetAngle()
+      var offsetAngle = this.getOffsetAngle(this.offset)
       ctx.beginPath()
       ctx.arc(this.center.x, this.center.y, this.r, this.startAngle, offsetAngle, this.antiClock)
       ctx.save()
       ctx.setLineDash([10, 5])
+      ctx.lineDashOffset = this.initDashOffset
       ctx.stroke()
       ctx.restore()
     }
@@ -105,9 +170,126 @@
       ctx.arc(this.center.x, this.center.y, this.r, this.startAngle, this.endAngle, this.antiClock)
       ctx.save()
       ctx.setLineDash([10, 5])
-      ctx.lineDashOffset = this.offset
+      ctx.lineDashOffset = this.offset + this.initDashOffset //通过改变offset实现位移动画
       ctx.stroke()
       ctx.restore()
+    }
+
+    // 画光点
+    Path.prototype.drawLightRoute = function() {
+
+      // if (this.lightOffset > this.distence) {
+      //   var offsetPoint = this.getOffsetPoint(this.lightOffset, true)
+      // } else {
+
+      // }
+
+      var offsetPoint = this.getOffsetPoint(this.lightOffset, true)
+      topCtx.save()
+      
+      var deltaX = offsetPoint.x - this.start.x
+      var deltaY = offsetPoint.y - this.start.y
+      var tailLength
+      var lingrad
+
+      if (deltaX !==0) {
+        tailLength = Math.abs(deltaX) > 100 ? (Math.abs(deltaX) * 100 / deltaX): deltaX
+        lingrad = topCtx.createLinearGradient(offsetPoint.x-tailLength, offsetPoint.y-3, offsetPoint.x, offsetPoint.y-3)
+        this.gradientX = offsetPoint.x-tailLength
+        this.gradientY = offsetPoint.y-3
+      } else if (deltaY !==0) {
+        tailLength = Math.abs(deltaY) > 100 ? (Math.abs(deltaY) * 100 / deltaY): deltaY
+        lingrad = topCtx.createLinearGradient(offsetPoint.x-3, offsetPoint.y-tailLength,  offsetPoint.x - 3, offsetPoint.y)
+        this.gradientX = offsetPoint.x-3
+        this.gradientY = offsetPoint.y-tailLength
+      }
+      lingrad.addColorStop(0, 'rgba(255, 0, 0, 0)')
+      lingrad.addColorStop(0.5,'rgba(255, 0, 0, .3)')
+      lingrad.addColorStop(0.8,'rgba(255, 0, 0, .5)')
+      lingrad.addColorStop(1,'rgba(255, 0, 0, 1)')
+      topCtx.fillStyle= lingrad
+
+      var delta = this.lightOffset - this.distence
+      delta = delta > 0 ? delta : 0
+      delta = delta < 100 ? delta : 100
+
+      // 为delta加上正负号
+      if (deltaX !==0) {
+        delta = delta * Math.abs(deltaX) / deltaX
+      } else if (deltaY !==0) {
+         delta = delta * Math.abs(deltaY) / deltaY
+      }
+
+      if (deltaX !==0) {
+        topCtx.fillRect(offsetPoint.x - tailLength, offsetPoint.y-3, tailLength - delta, 6)
+      } else {
+        topCtx.fillRect(offsetPoint.x - 3, offsetPoint.y - tailLength, 6, tailLength - delta)
+      }
+
+      if (this.lightOffset <= this.distence) {
+        topCtx.beginPath()
+        topCtx.arc(offsetPoint.x, offsetPoint.y, 3, 0, 2 * Math.PI)
+        topCtx.fill()
+      }
+      
+      topCtx.restore()
+    }
+
+    Path.prototype.drawLightArcRoute = function() {
+      var offsetAngle = this.getOffsetAngle(this.lightOffset, true)
+      var x = this.center.x + this.r * Math.cos(offsetAngle)
+      var y = this.center.y + this.r * Math.sin(offsetAngle)
+
+      var deltaX = x - this.start.x
+      var deltaY = y - this.start.y
+
+      var gradientX, gradientY
+      if (this.prePath) {
+        gradientX = this.prePath.gradientX
+        gradientY = this.prePath.gradientY
+      } else {
+        gradientX = this.start.x
+        gradientY = this.start.y
+      }
+      
+      lingrad = topCtx.createLinearGradient(gradientX, gradientY, x, y)
+      lingrad.addColorStop(0, 'rgba(255, 0, 0, 0)')
+      lingrad.addColorStop(0.5,'rgba(255, 0, 0, .3)')
+      lingrad.addColorStop(0.8,'rgba(255, 0, 0, .5)')
+      lingrad.addColorStop(1,'rgba(255, 0, 0, 1)')
+      topCtx.save()
+
+      topCtx.strokeStyle = lingrad
+      topCtx.lineWidth = 6
+      
+      topCtx.beginPath()
+      
+      var delta = offsetAngle - this.startAngle
+      var halfAngle = (this.endAngle - this.startAngle) * 2/ 3
+      if (Math.abs(delta) > Math.abs(halfAngle)) {
+        //console.log(delta, halfAngle)
+        //delta = halfAngle
+      }
+
+      if (this.lightOffset < this.distence) {
+        topCtx.arc(this.center.x, this.center.y, this.r, offsetAngle - delta, offsetAngle, this.antiClock)
+        topCtx.stroke()
+        topCtx.beginPath()
+        topCtx.arc(x, y, 3, 0, 2 * Math.PI)
+        topCtx.fillStyle = '#f00'
+        topCtx.fill()
+      } else {
+        var startAngle
+        if (delta > 0) {
+          startAngle = offsetAngle - delta < this.endAngle ? offsetAngle - delta : this.endAngle
+        } else {
+          startAngle = offsetAngle - delta > this.endAngle ? offsetAngle - delta : this.endAngle
+        }
+        topCtx.arc(this.center.x, this.center.y, this.r, startAngle, this.endAngle, this.antiClock)
+        topCtx.stroke()
+      }
+
+      topCtx.restore()
     }
 
     // 获取起始点与结束点的距离
@@ -116,24 +298,22 @@
     }
 
     // 获取直线模式下，当前offset对应点坐标
-    Path.prototype.getOffsetPoint = function() {
-      if (this.offset >= this.distence) {
+    Path.prototype.getOffsetPoint = function(offset, canOver) {
+      if (offset >= this.distence && !canOver) {
         return this.end
       }
-      var x = this.start.x + (this.offset * (this.end.x - this.start.x) / this.distence)
-      var y = this.start.y + (this.offset * (this.end.y - this.start.y) / this.distence)
+      var x = this.start.x + (offset * (this.end.x - this.start.x) / this.distence)
+      var y = this.start.y + (offset * (this.end.y - this.start.y) / this.distence)
       return new Point('offset', x, y)
     }
 
     // 获取圆弧模式下，当前offset对应的弧度
-    Path.prototype.getOffsetAngle = function() {
-      if (this.offset>= this.distence) {
+    Path.prototype.getOffsetAngle = function(offset, canOver) {
+      if (offset>= this.distence && !canOver) {
         return this.endAngle
       }
-      return this.startAngle + ((this.endAngle - this.startAngle) * this.offset/ this.distence)
+      return this.startAngle + ((this.endAngle - this.startAngle) * offset/ this.distence)
     }
-
-    
 
     function Rect(centerPoint, width, color) {
       this.center = centerPoint
@@ -173,6 +353,9 @@
       canvas = document.getElementById('mCanvas')
       ctx = canvas.getContext('2d')
 
+      topCanvas = document.getElementById('topCanvas')
+      topCtx = topCanvas.getContext('2d')
+
       pointA = new Point('A', 500, 150)
       pointA1 = new Point('A-1', 600, 150)
       pointA2 = new Point('A-2', 550, 100)
@@ -208,7 +391,11 @@
       // A到Cloud的中间点
       var pointMidAtoCloud= new Point('MidAtoCloud', 500, 200)
       // A到中间点
-      var pathAtoMid = new Path(pointA, pointMidAtoCloud)
+      var pathAtoMid = new Path(pointA, pointMidAtoCloud, -5)
+
+      //连接 A2toA 与 AtoMid线段，连接后完整线段为 点A2到点Cloud
+      pathA2toA.setNextPath(pathAtoMid)
+
       // 中间点到Cloud
       var pathMidtoCloud = new Path(pointMidAtoCloud, pointCloud)
       //连接 AtoMid 与 MidtoCloud线段
@@ -217,31 +404,33 @@
       var pointCircleCenter = new Point('CircleCenter', 450, 200)
       pathMidtoCloud.setArcMode(pointCircleCenter, 50, 0, Math.PI/2)
 
-      //连接 A1toA 与 AtoMid线段，连接后完整线段为 点A1到点Cloud
-      pathA1toA.setNextPath(pathAtoMid)
+      // 设置A2toA的位移动画 等待 pathA1toA同时开始
+      pathA2toA.setAnimateWaitFor(pathA1toA)
       
       paths.push(pathA1toA)
       paths.push(pathA2toA)
       
-      paths.push(new Path(pointB, pointCloud))
+      paths.push(new Path(pointB, pointCloud, 0, true))
 
       var pathC1toC = new Path(pointC1, pointC)
-      var pathCtoCloud = new Path(pointC, pointCloud)
+      var pathCtoCloud = new Path(pointC, pointCloud, 0, true)
       pathCtoCloud.setArcMode(new Point('CircleCenter', 350, 50), 200, Math.PI * 1.6 /2, Math.PI/2, true)
       pathC1toC.setNextPath(pathCtoCloud)
       paths.push(pathC1toC)
 
-      paths.push(new Path(pointD, pointCloud))
+      paths.push(new Path(pointD, pointCloud, 0, true))
 
       var pointMidEtoCloud = new Point('MidEtoCloud', 300, 200)
-      var pathEtoMid = new Path(pointE, pointMidEtoCloud)
+      var pathEtoMid = new Path(pointE, pointMidEtoCloud, 5)
       var pathMidtoCloud = new Path(pointMidEtoCloud, pointCloud)
       pathEtoMid.setNextPath(pathMidtoCloud)
       var pointCircleCenter = new Point('CircleCenter', 350, 200)
       pathMidtoCloud.setArcMode(pointCircleCenter, 50, Math.PI, Math.PI/2, true)
       paths.push(pathEtoMid)
 
-      paths.push(new Path(pointF, pointCloud))
+      paths.push(new Path(pointF, pointCloud, 0, true))
+
+      intervalId = null
       startAnimate()
     }
 
@@ -264,12 +453,12 @@
         }
         drawRects()
       }
-      setInterval(draw, 60)
+      intervalId = setInterval(draw, 20)
     }
 
     function clear() {
-      ctx.fillStyle = '#fff'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      topCtx.clearRect(0, 0, topCtx.canvas.width, topCtx.canvas.height)
     }
 
     function drawRects() {
@@ -279,14 +468,59 @@
       }
     }
 
+    function reset() {
+      if (intervalId) {
+        clearInterval(intervalId)
+        init()
+      }
+    }
+
   </script>
 </head>
 <style>
+  .m-box {
+    position: relative;
+  }
   canvas {
-    background-color: #eee;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  #mVideo {
+    margin-left: 800px;
+  }
+
+  .solution-1 {
+    position: absolute;
+    width: 402px;
+    height: 261px;
+    left: 380px;
+    top: 130px;
+  }
+  .solution-2 {
+    position: absolute;
+    width: 1194px;
+    height: 411px;
+    z-index: 2;
+  }
+  .solution-3 {
+    position: absolute;
+    left: 410px;
+    top: 350px;
+    width: 347px;
+    height: 188px;
+    z-index: 1;
   }
 </style>
 <body onload="init()">
-  <canvas id='mCanvas' width='800px' height="500px"></canvas>
+  <button onclick="reset()"> reset </button>
+  <div class='m-box'>
+    <canvas id='topCanvas' width='800px' height="500px"></canvas>
+    <canvas id='mCanvas' width='800px' height="500px"></canvas>
+    <!-- <img class='solution-1' src='./solution-1.png'/>
+    <img class='solution-2' src='./cloud.png'/>
+    <img class='solution-3' src='./solution-3.png'/> -->
+  </div>
 </body>
 </html>
