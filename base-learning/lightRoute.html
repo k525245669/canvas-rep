@@ -339,13 +339,22 @@
       return this
     }
 
-    Point.prototype.DrawName = function() {
+    Point.prototype.DrawName = function(color) {
       ctx.save()
-      ctx.fillStyle='#fff'
+      ctx.fillStyle= color || '#fff'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       ctx.fillText(this.name, this.x, this.y-5)
       ctx.fillText(`(${this.x}, ${this.y})`, this.x, this.y+5)
+      ctx.restore()
+    }
+
+    Point.prototype.DrawDot = function () {
+      ctx.save()
+      ctx.fillStyle = '#0ff'
+      ctx.beginPath()
+      ctx.arc(this.x, this.y, 3, 0, Math.PI * 2)
+      ctx.fill()
       ctx.restore()
     }
 
@@ -356,17 +365,17 @@
       topCanvas = document.getElementById('topCanvas')
       topCtx = topCanvas.getContext('2d')
 
-      pointA = new Point('A', 500, 150)
-      pointA1 = new Point('A-1', 600, 150)
-      pointA2 = new Point('A-2', 550, 100)
-      pointB = new Point('B', 700, 250)
-      pointC = new Point('C', 180, 150)
-      pointC1 = new Point('C-1', 180, 100)
-      pointD = new Point('D', 100, 250)
-      pointE = new Point('E', 300, 100)
-      pointF = new Point('F', 400, 50)
-      pointCloud = new Point('Cloud', 400, 250)
-      pointClient = new Point('Client', 400, 400)
+      pointA = new Point('A', 810, 180)
+      pointA1 = new Point('A-1', 940, 180)
+      pointA2 = new Point('A-2', 890, 100)
+      pointB = new Point('B', 940, 310)
+      pointC = new Point('C', 230, 200)
+      pointC1 = new Point('C-1', 230, 150)
+      pointD = new Point('D', 200, 310)
+      pointE = new Point('E', 360, 100)
+      pointF = new Point('F', 580, 50)
+      pointCloud = new Point('Cloud', 580, 310)
+      pointClient = new Point('Client', 580, 400)
       addClient = false //是否添加了云到端的路径
 
       rects = []
@@ -382,14 +391,35 @@
       rects.push(new Rect(pointE, 50))
       rects.push(new Rect(pointF, 50))
 
+
+
+      helps = []
+      helps.push(pointA)
+      helps.push(pointA1)
+      helps.push(pointA2)
+      helps.push(pointB)
+      helps.push(pointC)
+      helps.push(pointC1)
+      helps.push(pointD)
+      helps.push(pointE)
+      helps.push(pointF)
+      helps.push(pointCloud)
+      helps.push(pointClient)
+
+
+
       paths = [] //所有路径的集合，各路径间无关联，集合内所有的路径同时开始绘制，。
 
       var pathA1toA = new Path(pointA1, pointA)
       var pathA2toA = new Path(pointA2, pointA)
-      pathA2toA.setArcMode(new Point('CircleCenter', 550, 150), 50, -Math.PI/2, -Math.PI, true)
+      var circleCenter = new Point('Ct', 860, 150)
+      helps.push(circleCenter)
+      pathA2toA.setArcMode(circleCenter, 50, -Math.PI/2, -Math.PI, true)
 
       // A到Cloud的中间点
-      var pointMidAtoCloud= new Point('MidAtoCloud', 500, 200)
+      var pointMidAtoCloud= new Point('M', 810, 260)
+      helps.push(pointMidAtoCloud)
+
       // A到中间点
       var pathAtoMid = new Path(pointA, pointMidAtoCloud, -5)
 
@@ -401,7 +431,8 @@
       //连接 AtoMid 与 MidtoCloud线段
       pathAtoMid.setNextPath(pathMidtoCloud)
       //todo 此处人工计算圆心的中心坐标及起始结束角度，需要优化。。
-      var pointCircleCenter = new Point('CircleCenter', 450, 200)
+      var pointCircleCenter = new Point('C', 760, 260)
+      helps.push(pointCircleCenter)
       pathMidtoCloud.setArcMode(pointCircleCenter, 50, 0, Math.PI/2)
 
       // 设置A2toA的位移动画 等待 pathA1toA同时开始
@@ -414,17 +445,21 @@
 
       var pathC1toC = new Path(pointC1, pointC)
       var pathCtoCloud = new Path(pointC, pointCloud, 0, true)
-      pathCtoCloud.setArcMode(new Point('CircleCenter', 350, 50), 200, Math.PI * 1.6 /2, Math.PI/2, true)
+      var circleCenter = new Point('CircleCenter', 400, 110)
+      helps.push(circleCenter)
+      pathCtoCloud.setArcMode(circleCenter, 200, Math.PI * 1.6 /2, Math.PI/2, true)
       pathC1toC.setNextPath(pathCtoCloud)
       paths.push(pathC1toC)
 
       paths.push(new Path(pointD, pointCloud, 0, true))
 
-      var pointMidEtoCloud = new Point('MidEtoCloud', 300, 200)
+      var pointMidEtoCloud = new Point('M-E', 360, 200)
+      helps.push(pointMidEtoCloud)
       var pathEtoMid = new Path(pointE, pointMidEtoCloud, 5)
       var pathMidtoCloud = new Path(pointMidEtoCloud, pointCloud)
       pathEtoMid.setNextPath(pathMidtoCloud)
-      var pointCircleCenter = new Point('CircleCenter', 350, 200)
+      var pointCircleCenter = new Point('CircleCenter', 410, 200)
+      helps.push(pointCircleCenter)
       pathMidtoCloud.setArcMode(pointCircleCenter, 50, Math.PI, Math.PI/2, true)
       paths.push(pathEtoMid)
 
@@ -451,7 +486,8 @@
             paths.push(new Path(pointCloud, pointClient))
           }
         }
-        drawRects()
+        //drawRects()
+        //drawHelps()
       }
       intervalId = setInterval(draw, 20)
     }
@@ -465,6 +501,14 @@
       for (var i = rects.length - 1; i >= 0; i--) {
         var rect = rects[i]
         rect.draw(ctx)
+      }
+    }
+
+    function drawHelps() {
+      for (var i = helps.length - 1; i >= 0; i--) {
+        var point = helps[i]
+        point.DrawDot()
+        point.DrawName('#f00')
       }
     }
 
@@ -485,6 +529,7 @@
     position: absolute;
     left: 0;
     top: 0;
+    z-index: 0;
   }
 
   #mVideo {
@@ -497,6 +542,7 @@
     height: 261px;
     left: 380px;
     top: 130px;
+    z-index: 2;
   }
   .solution-2 {
     position: absolute;
@@ -506,7 +552,7 @@
   }
   .solution-3 {
     position: absolute;
-    left: 410px;
+    left: 407px;
     top: 350px;
     width: 347px;
     height: 188px;
@@ -516,11 +562,11 @@
 <body onload="init()">
   <button onclick="reset()"> reset </button>
   <div class='m-box'>
-    <canvas id='topCanvas' width='800px' height="500px"></canvas>
-    <canvas id='mCanvas' width='800px' height="500px"></canvas>
-    <!-- <img class='solution-1' src='./solution-1.png'/>
+    <canvas id='topCanvas' width='1200px' height="500px"></canvas>
+    <canvas id='mCanvas' width='1200px' height="500px"></canvas>
+    <img class='solution-1' src='./solution-1.png'/>
     <img class='solution-2' src='./cloud.png'/>
-    <img class='solution-3' src='./solution-3.png'/> -->
+    <img class='solution-3' src='./solution-3.png'/>
   </div>
 </body>
 </html>
